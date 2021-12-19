@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[19]:
 
 
 get_ipython().run_line_magic('matplotlib', '')
@@ -19,7 +19,6 @@ import os
 from tqdm import tqdm
 import pandas as pd
 import random
-import sklearn.metrics import confusion_matrix
 from scipy.stats import beta
 from scipy.stats import uniform
 from scipy.stats import binom
@@ -87,7 +86,7 @@ with open('id_set.pickle', 'rb') as f:
     ID_SET = pickle.load(f)
 
 
-# In[8]:
+# In[23]:
 
 
 # sample a simple graph, approximately uniformly at random, from all graphs with given degree sequence
@@ -308,7 +307,6 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
 
     labels_flattened = np.array((list(range(10)) * predictions.shape[1])).reshape(predictions.shape).T.flatten()
     predictions_flattened = predictions.flatten()
-    confusion_matrix_1 = confusion_matrix(labels_flattened, predictions_flattened)
 
     results = {
         'experiment_id': experiment_id,
@@ -317,7 +315,6 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
         'training_last_n': ((outputs[:, 1, -1000:] @ v.T).argmax(axis=-1) == np.arange(10)[:, np.newaxis]).sum() / 10000,
         'acc': acc, 
         'acc_mean': acc.mean(),
-        'confusion_matrix': confusion_matrix_1,
         'labels': labels_flattened,
         'predictions': predictions_flattened,
         'original_predictions': predictions
@@ -487,11 +484,11 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Random Search
 
-# In[16]:
+# In[22]:
 
 
 ignore_errors=False
-base_case=False
+base_case=True
 while True:
     if ignore_errors:
         try:
