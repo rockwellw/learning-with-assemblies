@@ -4,7 +4,7 @@
 # In[1]:
 
 
-get_ipython().run_line_magic('matplotlib', 'notebook')
+get_ipython().run_line_magic('matplotlib', '')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
