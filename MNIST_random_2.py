@@ -19,7 +19,7 @@ import os
 from tqdm import tqdm
 import pandas as pd
 import random
-import sklearn
+import sklearn.metrics import confusion_matrix
 from scipy.stats import beta
 from scipy.stats import uniform
 from scipy.stats import binom
@@ -308,7 +308,7 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
 
     labels_flattened = np.array((list(range(10)) * predictions.shape[1])).reshape(predictions.shape).T.flatten()
     predictions_flattened = predictions.flatten()
-    confusion_matrix_1 = sklearn.metrics.confusion_matrix(labels_flattened, predictions_flattened)
+    confusion_matrix_1 = confusion_matrix(labels_flattened, predictions_flattened)
 
     results = {
         'experiment_id': experiment_id,
