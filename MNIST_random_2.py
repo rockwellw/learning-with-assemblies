@@ -557,7 +557,7 @@ while True:
         n_neurons = 2000
         beta_factor = random.uniform(0.1, 1.5)
         n_examples = 5000
-        cap_size = random.randint(int(n_neurons/20, int(n_neurons/10)))
+        cap_size = random.randint(int(n_neurons/20), int(n_neurons/10))
         n_iter = random.randint(int(n_neurons/10), n_neurons-1)
         distribution_type = random.choice(['beta', 'uniform', 'binomial'])
         n_rounds = 5
