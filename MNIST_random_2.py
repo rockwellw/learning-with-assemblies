@@ -3,6 +3,8 @@
 
 # In[20]:
 
+
+get_ipython().run_line_magic('matplotlib', 'notebook')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -21,6 +23,7 @@ import sklearn
 from scipy.stats import beta
 from scipy.stats import uniform
 from scipy.stats import binom
+import sys
 
 
 # In[7]:
@@ -64,14 +67,14 @@ def k_cap(input, cap_size):
 # In[11]:
 
 
-# EXPERIMENT_STORE = []
-# ID_SET = set()
+EXPERIMENT_STORE = []
+ID_SET = set()
 
-# with open('experiment_store.pickle', 'wb') as f:
-#     pickle.dump(EXPERIMENT_STORE, f)
+with open('experiment_store.pickle', 'wb') as f:
+    pickle.dump(EXPERIMENT_STORE, f)
 
-# with open('id_set.pickle', 'wb') as f:
-#     pickle.dump(ID_SET, f)
+with open('id_set.pickle', 'wb') as f:
+    pickle.dump(ID_SET, f)
 
 
 # In[12]:
@@ -84,7 +87,7 @@ with open('id_set.pickle', 'rb') as f:
     ID_SET = pickle.load(f)
 
 
-# In[21]:
+# In[23]:
 
 
 # sample a simple graph, approximately uniformly at random, from all graphs with given degree sequence
@@ -230,8 +233,6 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
     idx[(i+1)*cap_size:] = np.unique(r)[1:]
 
     if verbose:
-        get_ipython().run_line_magic('matplotlib', 'inline')
-
         fig, axes = plt.subplots(10, n_rounds, figsize=(10, 2 * 10), sharex=True, sharey=True)
         for ax, output in zip(axes, outputs):
             for i in range(n_rounds):
@@ -450,20 +451,54 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
     return final_degree_sequence_W
 
 
+# ## Grid Search
+
+# In[18]:
+
+
+# example_beta_degree_sequences = generate_degree_sequences('beta', 784, 50000, a=0.3, b=0.3, verbose=True)
+
+# example_uniform_degree_sequences = generate_degree_sequences('uniform', 784, 50000, verbose=True)
+
+# example_binomial_degree_sequences = generate_degree_sequences('binomial', 784, 50000, n=5000, p=0.2, verbose=True)
+
+# example_degree_sequences = [example_uniform_degree_sequences, example_beta_degree_sequences, example_binomial_degree_sequences]
+
+
+# In[ ]:
+
+
+# iteration_list = []
+# for degree_sequence_W_in in example_degree_sequences:
+#     for degree_sequence_W_out in example_degree_sequences:
+#         for scaling_factor in [1, 1.2]:
+#             iteration_list.append({
+#                 'degree_sequence_in': degree_sequence_W_in,
+#                 'scaling_factor': scaling_factor,
+#                 'degree_sequence_out': degree_sequence_W_out,
+#             })
+# for params in tqdm(iteration_list):
+#     scaling_factor = params['scaling_factor']
+#     degree_sequence_W_in = params['degree_sequence_in']
+#     degree_sequence_W_out = params['degree_sequence_out']
+#     final_degree_sequence_W = scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_factor, n_swaps=100)
+#     run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=True, degree_sequence_W=final_degree_sequence_W, degree_sequence_A=final_degree_sequence_W, n_neurons=len(final_degree_sequence_W), n_iter=25, cap_size=50, n_examples=100)
+
+
 # ## Random Search
 
-# In[22]:
+# In[25]:
 
 
 while True:
     try:
-        n_neurons = random.randint(784, 4000)
+        n_neurons = 2000
         beta_factor = random.uniform(0.1, 1.5)
-        n_examples = random.randint(100, 8000)
+        n_examples = 5000
         cap_size = random.randint(50, int(n_neurons/10 - 1))
         n_iter = random.randint(int(n_neurons/10), n_neurons-1)
         distribution_type = random.choice(['beta', 'uniform', 'binomial'])
-        n_rounds = random.randint(3, 10)
+        n_rounds = 5
         n_connections = random.randint(int(n_neurons/25*n_neurons), int(n_neurons/5*n_neurons))
         if distribution_type == 'beta':
             a = random.uniform(0.1, 3)
@@ -484,7 +519,9 @@ while True:
             n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
             beta_factor=beta_factor)
     except Exception as e:
-        print(e)
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
         continue
 
 
