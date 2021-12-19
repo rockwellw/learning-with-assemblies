@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[20]:
+# In[1]:
 
 
 get_ipython().run_line_magic('matplotlib', 'notebook')
@@ -26,13 +26,13 @@ from scipy.stats import binom
 import sys
 
 
-# In[7]:
+# In[2]:
 
 
 rng = np.random.default_rng()
 
 
-# In[8]:
+# In[3]:
 
 
 # Note -- place your own MNIST files in the appropriate directory
@@ -40,7 +40,7 @@ train_data = np.loadtxt("./data/mnist/mnist_train.csv", delimiter=',')
 test_data = np.loadtxt("./data/mnist/mnist_test.csv", delimiter=',')
 
 
-# In[9]:
+# In[4]:
 
 
 train_imgs = train_data[:, 1:]  # (60000, 784)
@@ -49,7 +49,7 @@ train_labels = train_data[:, 0]  # (60000, )
 test_labels = test_data[:, 0]  # (10000, )
 
 
-# In[10]:
+# In[5]:
 
 
 # Change the top k input values to 1, rest of the values to 0
@@ -64,7 +64,7 @@ def k_cap(input, cap_size):
     return output
 
 
-# In[11]:
+# In[6]:
 
 
 EXPERIMENT_STORE = []
@@ -77,7 +77,7 @@ with open('id_set.pickle', 'wb') as f:
     pickle.dump(ID_SET, f)
 
 
-# In[12]:
+# In[7]:
 
 
 with open('experiment_store.pickle', 'rb') as f:
@@ -87,7 +87,7 @@ with open('id_set.pickle', 'rb') as f:
     ID_SET = pickle.load(f)
 
 
-# In[23]:
+# In[8]:
 
 
 # sample a simple graph, approximately uniformly at random, from all graphs with given degree sequence
@@ -341,7 +341,7 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
 # 2. heterogenaity rate
 # 3. Amount the in degree and out degree are misaligned
 
-# In[14]:
+# In[9]:
 
 
 degree_sequences = [
@@ -350,7 +350,7 @@ degree_sequences = [
 ]
 
 
-# In[15]:
+# In[10]:
 
 
 len(degree_sequences[0])
@@ -358,7 +358,7 @@ len(degree_sequences[0])
 
 # ## Distribution generated degree sequences experiment
 
-# In[16]:
+# In[11]:
 
 
 def generate_degree_sequences(distribution, n_neurons, desired_connections, verbose=False, **kwargs):
@@ -399,7 +399,7 @@ def generate_degree_sequences(distribution, n_neurons, desired_connections, verb
         raise ValueError('Samples transformed is empty')
 
 
-# In[17]:
+# In[12]:
 
 
 import random
@@ -453,7 +453,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Grid Search
 
-# In[18]:
+# In[13]:
 
 
 # example_beta_degree_sequences = generate_degree_sequences('beta', 784, 50000, a=0.3, b=0.3, verbose=True)
@@ -465,7 +465,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 # example_degree_sequences = [example_uniform_degree_sequences, example_beta_degree_sequences, example_binomial_degree_sequences]
 
 
-# In[ ]:
+# In[14]:
 
 
 # iteration_list = []
@@ -487,15 +487,77 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Random Search
 
-# In[25]:
+# In[16]:
 
 
+ignore_errors=False
+base_case=False
 while True:
-    try:
+    if ignore_errors:
+        try:
+            n_neurons = 2000
+            beta_factor = random.uniform(0.1, 1.5)
+            n_examples = 5000
+            cap_size = random.randint(50, int(n_neurons/10 - 1))
+            n_iter = random.randint(int(n_neurons/10), n_neurons-1)
+            distribution_type = random.choice(['beta', 'uniform', 'binomial'])
+            n_rounds = 5
+            n_connections = random.randint(int(n_neurons/25*n_neurons), int(n_neurons/5*n_neurons))
+            if distribution_type == 'beta':
+                a = random.uniform(0.1, 3)
+                b = random.uniform(0.1, 3)
+                degree_sequence = generate_degree_sequences('beta', n_neurons, n_connections, a=a, b=b, verbose=True)
+            elif distribution_type == 'uniform':
+                degree_sequence = generate_degree_sequences('uniform', n_neurons, n_connections, verbose=True)
+            elif distribution_type == 'binomial':
+                p=random.uniform(0.05, 0.45)
+                n=random.randint(n_neurons/2, n_neurons*10)
+                degree_sequence = generate_degree_sequences('binomial', n_neurons, n_connections, n=n, p=p, verbose=True)
+            
+            final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
+            run_experiment(train_imgs, test_imgs, train_labels, test_labels, 
+                verbose=True, degree_sequence_W=final_degree_sequence_W, 
+                degree_sequence_A=final_degree_sequence_W, 
+                n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
+                n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
+                beta_factor=beta_factor)
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            continue
+    elif base_case:
+        n_neurons = 2000
+        beta_factor = 1
+        n_examples = 5000
+        cap_size = 200
+        n_iter = random.randint(int(n_neurons/10), n_neurons-1)
+        distribution_type = random.choice(['beta', 'uniform', 'binomial'])
+        n_rounds = 5
+        n_connections =399800
+        if distribution_type == 'beta':
+            a = random.uniform(0.1, 3)
+            b = random.uniform(0.1, 3)
+            degree_sequence = generate_degree_sequences('beta', n_neurons, n_connections, a=a, b=b, verbose=True)
+        elif distribution_type == 'uniform':
+            degree_sequence = generate_degree_sequences('uniform', n_neurons, n_connections, verbose=True)
+        elif distribution_type == 'binomial':
+            p=random.uniform(0.05, 0.45)
+            n=random.randint(n_neurons/2, n_neurons*10)
+            degree_sequence = generate_degree_sequences('binomial', n_neurons, n_connections, n=n, p=p, verbose=True)
+        degree_sequence = generate_degree_sequences('binomial', n_neurons, n_connections, n=5000, p=0.1, verbose=True)
+        final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
+        run_experiment(train_imgs, test_imgs, train_labels, test_labels, 
+            verbose=True, degree_sequence_W=final_degree_sequence_W, 
+            degree_sequence_A=final_degree_sequence_W, 
+            n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
+            n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
+            beta_factor=beta_factor)
+    else:
         n_neurons = 2000
         beta_factor = random.uniform(0.1, 1.5)
         n_examples = 5000
-        cap_size = random.randint(50, int(n_neurons/10 - 1))
+        cap_size = random.randint(int(n_neurons/20, int(n_neurons/10)))
         n_iter = random.randint(int(n_neurons/10), n_neurons-1)
         distribution_type = random.choice(['beta', 'uniform', 'binomial'])
         n_rounds = 5
@@ -518,11 +580,6 @@ while True:
             n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
             n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
             beta_factor=beta_factor)
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
-        continue
 
 
 # In[ ]:
