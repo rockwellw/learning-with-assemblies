@@ -512,7 +512,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Random Search
 
-# In[37]:
+# In[38]:
 
 
 ignore_errors=True
