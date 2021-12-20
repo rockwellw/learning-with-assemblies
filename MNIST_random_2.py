@@ -533,19 +533,32 @@ while True:
             if distribution_type == 'beta':
                 a = random.uniform(0.1, 3)
                 b = random.uniform(0.1, 3)
+                distribution = {
+                    'type': 'beta',
+                    'a': a,
+                    'b': b
+                }
                 degree_sequence = generate_degree_sequences('beta', n_neurons, n_connections, a=a, b=b, verbose=True)
             elif distribution_type == 'uniform':
+                distribution = {
+                    'type': 'uniform'
+                }
                 degree_sequence = generate_degree_sequences('uniform', n_neurons, n_connections, verbose=True)
             elif distribution_type == 'binomial':
                 p=random.uniform(0.05, 0.45)
                 n=random.randint(n_neurons/2, n_neurons*10)
+                distribution = {
+                    'type': 'binomial',
+                    'n': n,
+                    'p': p
+                }
                 degree_sequence = generate_degree_sequences('binomial', n_neurons, n_connections, n=n, p=p, verbose=True)
             
             final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
             run_experiment(train_imgs, test_imgs, train_labels, test_labels, 
                 verbose=True, degree_sequence_W=final_degree_sequence_W, 
                 use_original_random_graph=False,
-                degree_sequence_A=final_degree_sequence_W, 
+                degree_sequence_A=final_degree_sequence_W, distribution=distribution,
                 n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
                 n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
                 beta_factor=beta_factor, a_sparsity=a_sparsity)
@@ -568,12 +581,25 @@ while True:
         if distribution_type == 'beta':
             a = random.uniform(0.1, 3)
             b = random.uniform(0.1, 3)
+            distribution = {
+                'type': 'beta',
+                'a': a,
+                'b': b
+            }
             degree_sequence = generate_degree_sequences('beta', n_neurons, n_connections, a=a, b=b, verbose=True)
         elif distribution_type == 'uniform':
+            distribution = {
+                'type': 'uniform'
+            }
             degree_sequence = generate_degree_sequences('uniform', n_neurons, n_connections, verbose=True)
         elif distribution_type == 'binomial':
             p=random.uniform(0.05, 0.45)
             n=random.randint(n_neurons/2, n_neurons*10)
+            distribution = {
+                'type': 'binomial',
+                'n': n,
+                'p': p
+            }
             degree_sequence = generate_degree_sequences('binomial', n_neurons, n_connections, n=n, p=p, verbose=True)
         degree_sequence = generate_degree_sequences('binomial', n_neurons, n_connections, n=5000, p=0.1, verbose=True)
         final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
@@ -583,7 +609,7 @@ while True:
             degree_sequence_A=final_degree_sequence_W, 
             n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
             n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
-            beta_factor=beta_factor, a_sparsity=a_sparsity)
+            beta_factor=beta_factor, a_sparsity=a_sparsity, distribution=distribution)
     else:
         n_neurons = 2000
         beta_factor = random.uniform(0.1, 1.5)
@@ -598,12 +624,25 @@ while True:
         if distribution_type == 'beta':
             a = random.uniform(0.1, 3)
             b = random.uniform(0.1, 3)
+            distribution = {
+                'type': 'beta',
+                'a': a,
+                'b': b
+            }
             degree_sequence = generate_degree_sequences('beta', n_neurons, n_connections, a=a, b=b, verbose=True)
         elif distribution_type == 'uniform':
+            distribution = {
+                'type': 'uniform'
+            }
             degree_sequence = generate_degree_sequences('uniform', n_neurons, n_connections, verbose=True)
         elif distribution_type == 'binomial':
             p=random.uniform(0.05, 0.45)
             n=random.randint(n_neurons/2, n_neurons*10)
+            distribution = {
+                'type': 'binomial',
+                'n': n,
+                'p': p
+            }
             degree_sequence = generate_degree_sequences('binomial', n_neurons, n_connections, n=n, p=p, verbose=True)
         
         final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
@@ -613,7 +652,7 @@ while True:
             degree_sequence_A=final_degree_sequence_W, 
             n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
             n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
-            beta_factor=beta_factor, a_sparsity=a_sparsity)
+            beta_factor=beta_factor, a_sparsity=a_sparsity, distribution=distribution)
 
 
 # In[18]:
