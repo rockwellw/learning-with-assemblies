@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# In[35]:
 
 
 get_ipython().run_line_magic('matplotlib', '')
@@ -87,7 +87,7 @@ with open('id_set.pickle', 'rb') as f:
     ID_SET = pickle.load(f)
 
 
-# In[33]:
+# In[36]:
 
 
 # sample a simple graph, approximately uniformly at random, from all graphs with given degree sequence
@@ -512,7 +512,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Random Search
 
-# In[34]:
+# In[37]:
 
 
 ignore_errors=True
@@ -520,13 +520,13 @@ base_case=False
 while True:
     if ignore_errors:
         try:
-            n_neurons = 2000
+            n_neurons = random.randint(784, 6000)
             beta_factor = random.uniform(0.1, 1.5)
             n_examples = 5000
             cap_size = random.randint(int(n_neurons/20), int(n_neurons/10))
             n_iter = random.randint(int(n_neurons/10), n_neurons-1)
             distribution_type = random.choice(['beta', 'uniform', 'binomial'])
-            n_rounds = 5
+            n_rounds = random.randint(3, 10)
             n_connections = random.randint(int(n_neurons/25*n_neurons), int(n_neurons/5*n_neurons))
             a_sparsity = random.uniform(0.025, 0.3)
 
@@ -611,13 +611,13 @@ while True:
             n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
             beta_factor=beta_factor, a_sparsity=a_sparsity, distribution=distribution)
     else:
-        n_neurons = 2000
+        n_neurons = random.randint(784, 6000)
         beta_factor = random.uniform(0.1, 1.5)
         n_examples = 5000
         cap_size = random.randint(int(n_neurons/20), int(n_neurons/10))
         n_iter = random.randint(int(n_neurons/10), n_neurons-1)
         distribution_type = random.choice(['beta', 'uniform', 'binomial'])
-        n_rounds = 5
+        n_rounds = random.randint(3, 10)
         n_connections = random.randint(int(n_neurons/25*n_neurons), int(n_neurons/5*n_neurons))
         a_sparsity = random.uniform(0.025, 0.3)
 
