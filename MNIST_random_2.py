@@ -515,7 +515,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 # In[34]:
 
 
-ignore_errors=False
+ignore_errors=True
 base_case=False
 while True:
     if ignore_errors:
@@ -523,11 +523,13 @@ while True:
             n_neurons = 2000
             beta_factor = random.uniform(0.1, 1.5)
             n_examples = 5000
-            cap_size = random.randint(50, int(n_neurons/10 - 1))
+            cap_size = random.randint(int(n_neurons/20), int(n_neurons/10))
             n_iter = random.randint(int(n_neurons/10), n_neurons-1)
             distribution_type = random.choice(['beta', 'uniform', 'binomial'])
             n_rounds = 5
             n_connections = random.randint(int(n_neurons/25*n_neurons), int(n_neurons/5*n_neurons))
+            a_sparsity = random.uniform(0.025, 0.3)
+
             if distribution_type == 'beta':
                 a = random.uniform(0.1, 3)
                 b = random.uniform(0.1, 3)
@@ -542,10 +544,11 @@ while True:
             final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
             run_experiment(train_imgs, test_imgs, train_labels, test_labels, 
                 verbose=True, degree_sequence_W=final_degree_sequence_W, 
+                use_original_random_graph=False,
                 degree_sequence_A=final_degree_sequence_W, 
                 n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
                 n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
-                beta_factor=beta_factor)
+                beta_factor=beta_factor, a_sparsity=a_sparsity)
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
