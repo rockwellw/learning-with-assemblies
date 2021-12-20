@@ -4,7 +4,7 @@
 # In[4]:
 
 
-get_ipython().run_line_magic('matplotlib', 'notebook')
+get_ipython().run_line_magic('matplotlib', '')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -64,7 +64,7 @@ def k_cap(input, cap_size):
     return output
 
 
-# In[9]:
+# In[31]:
 
 
 EXPERIMENT_STORE = []
@@ -77,7 +77,7 @@ with open('id_set.pickle', 'wb') as f:
     pickle.dump(ID_SET, f)
 
 
-# In[10]:
+# In[32]:
 
 
 with open('experiment_store.pickle', 'rb') as f:
@@ -87,7 +87,7 @@ with open('id_set.pickle', 'rb') as f:
     ID_SET = pickle.load(f)
 
 
-# In[26]:
+# In[33]:
 
 
 # sample a simple graph, approximately uniformly at random, from all graphs with given degree sequence
@@ -512,7 +512,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Random Search
 
-# In[29]:
+# In[34]:
 
 
 ignore_errors=False
