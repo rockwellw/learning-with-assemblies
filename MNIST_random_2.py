@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[19]:
+# In[4]:
 
 
-get_ipython().run_line_magic('matplotlib', '')
+get_ipython().run_line_magic('matplotlib', 'notebook')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -23,15 +23,16 @@ from scipy.stats import beta
 from scipy.stats import uniform
 from scipy.stats import binom
 import sys
+from datetime import datetime
 
 
-# In[2]:
+# In[5]:
 
 
 rng = np.random.default_rng()
 
 
-# In[3]:
+# In[6]:
 
 
 # Note -- place your own MNIST files in the appropriate directory
@@ -39,7 +40,7 @@ train_data = np.loadtxt("./data/mnist/mnist_train.csv", delimiter=',')
 test_data = np.loadtxt("./data/mnist/mnist_test.csv", delimiter=',')
 
 
-# In[4]:
+# In[7]:
 
 
 train_imgs = train_data[:, 1:]  # (60000, 784)
@@ -48,7 +49,7 @@ train_labels = train_data[:, 0]  # (60000, )
 test_labels = test_data[:, 0]  # (10000, )
 
 
-# In[5]:
+# In[8]:
 
 
 # Change the top k input values to 1, rest of the values to 0
@@ -63,7 +64,7 @@ def k_cap(input, cap_size):
     return output
 
 
-# In[6]:
+# In[9]:
 
 
 EXPERIMENT_STORE = []
@@ -76,7 +77,7 @@ with open('id_set.pickle', 'wb') as f:
     pickle.dump(ID_SET, f)
 
 
-# In[7]:
+# In[10]:
 
 
 with open('experiment_store.pickle', 'rb') as f:
@@ -86,7 +87,7 @@ with open('id_set.pickle', 'rb') as f:
     ID_SET = pickle.load(f)
 
 
-# In[23]:
+# In[26]:
 
 
 # sample a simple graph, approximately uniformly at random, from all graphs with given degree sequence
@@ -95,7 +96,7 @@ with open('id_set.pickle', 'rb') as f:
 def softmax(x):
     return np.exp(x) / np.exp(x).sum(axis=-1, keepdims=True)
 
-def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=True, **kwargs):
+def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=True, use_original_random_graph=False, **kwargs):
     
     # Sensory area graph
     # Runnable Object for each model
@@ -109,12 +110,13 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
     n_examples = kwargs.get('n_examples', 100)
     degree_sequence_A = kwargs['degree_sequence_A']
     degree_sequence_W = kwargs['degree_sequence_W']
+    a_sparsity = kwargs['a_sparsity']
 
-    print('printing diags')
-    print(n_iter)
-    in_s, out_s = zip(*degree_sequence_A)
-    print(pd.Series(in_s).describe())
-    print(pd.Series(out_s).describe())
+    if verbose:
+        print('degree distribution summary')
+        in_s, out_s = zip(*degree_sequence_W)
+        print(pd.Series(in_s).describe())
+        print(pd.Series(out_s).describe())
 
     experiment_id = uuid.uuid1()
     while experiment_id in ID_SET:
@@ -126,52 +128,78 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
     if not os.path.exists(f'./results/{experiment_id}'):
         os.mkdir(f'./results/{experiment_id}')
 
-    A_edges = random_graph.sample_directed_graph(degree_sequence=degree_sequence_A, n_iter=n_iter)
+    # A_edges = random_graph.sample_directed_graph(degree_sequence=degree_sequence_A, n_iter=n_iter)
     W_edges = random_graph.sample_directed_graph(degree_sequence=degree_sequence_W, n_iter=n_iter)
 
-    A_graph = nx.DiGraph()
-    A_graph.add_nodes_from(range(n_neurons))
-    A_graph.add_edges_from(A_edges)
+    print('initialized random edges')
+
+    # A_graph = nx.DiGraph()
+    # A_graph.add_nodes_from(range(n_neurons))
+    # A_graph.add_edges_from(A_edges)
 
     W_graph = nx.DiGraph()
     W_graph.add_nodes_from(range(n_neurons))
     W_graph.add_edges_from(W_edges)
 
+    print('initialized random graphs')
+
     if verbose:
-        nx.draw(W_graph)
+        indices = np.random.choice(len(degree_sequence_W), size=len(degree_sequence_W)//10, replace=False)
+        W_subgraph = W_graph.subgraph(indices)
+        nx.draw(W_subgraph)
         plt.savefig(f'./results/{experiment_id}/graph_visualization.png')
+
+    print('plotted graph figure')
     
-    mask = np.squeeze(np.asarray((nx.linalg.graphmatrix.adjacency_matrix(W_graph).todense() & np.logical_not(np.eye(n_neurons, dtype=bool)))))
-    mask_a = np.squeeze(np.asarray((nx.linalg.graphmatrix.adjacency_matrix(A_graph).todense() & np.logical_not(np.eye(n_neurons, dtype=bool)))))
-    mask_a = mask_a[:n_in, :n_neurons]
-    
-    # Fix nan during mask_a truncation
-    total_connects = mask_a.sum(axis=0)
-    counter = 0
-    for j in range(n_neurons):
-        if total_connects[j] == 0:
-            # print('reached')
-            replace_i = random.randrange(n_in)
-            mask_a[replace_i, j] = mask_a[replace_i, j]+1
-            counter += 1
-    print(counter)
-    
-    while counter != 0:
-        i = random.randrange(n_in)
-        j = random.randrange(n_neurons)
-    
-        if total_connects[j] > 2 and mask_a[i, j] == 1:
-            mask_a[i, j] = 0
-            total_connects[j] -= 1
-            counter -= 1
+    mask = np.squeeze(np.asarray((nx.linalg.graphmatrix.adjacency_matrix(W_graph).todense() & np.logical_not(np.eye(n_neurons, dtype=bool))))).astype(bool)
+    # mask_a = np.squeeze(np.asarray((nx.linalg.graphmatrix.adjacency_matrix(A_graph).todense() & np.logical_not(np.eye(n_neurons, dtype=bool)))))
+    # mask_a = mask_a[:n_in, :n_neurons]
+
+    print('created adjacency matrix')
 
     W = np.ones((n_neurons, n_neurons)) * mask
     W /= W.sum(axis=0)
+    W = W.astype(np.float64)
+    
+    mask_a = np.zeros((n_in, n_neurons), dtype=bool)
+    A = np.zeros((n_in, n_neurons))
+    mask_a = rng.random((n_in, n_neurons)) < a_sparsity
     A = np.ones((n_in, n_neurons)) * mask_a
     A /= A.sum(axis=0)
 
-    W = W.astype(np.float64)
-    A = A.astype(np.float64)
+    with open('mask_0.pickle', 'wb') as f:
+        pickle.dump([mask, mask_a], f)
+
+    if use_original_random_graph:
+        print('Using original random graph')
+        n_in = 784
+        n_neurons = 2000
+        cap_size = 200
+        sparsity = 0.1
+        n_rounds = 5
+        beta = 1e0
+
+        # mask = np.zeros((n_neurons, n_neurons), dtype=bool)
+        W = np.zeros((n_neurons, n_neurons))
+
+        # mask_a = np.zeros((n_in, n_neurons), dtype=bool)
+        A = np.zeros((n_in, n_neurons))
+
+        # Random mask on inter-area connections
+        # Choose 10% of connections and not the diagnal
+        mask = (rng.random((n_neurons, n_neurons)) < sparsity) & np.logical_not(np.eye(n_neurons, dtype=bool))
+        W = np.ones((n_neurons, n_neurons)) * mask
+        W /= W.sum(axis=0)
+
+        # Random mask on input-learning area connections
+        mask_a = rng.random((n_in, n_neurons)) < sparsity
+        A = np.ones((n_in, n_neurons)) * mask_a
+        A /= A.sum(axis=0)
+
+        with open('mask_1.pickle', 'wb') as f:
+            pickle.dump([mask, mask_a], f)
+
+    print('created W and A')
 
     # k-cap on convolved input pixels
     n_examples = 1000
@@ -317,7 +345,8 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
         'acc_mean': acc.mean(),
         'labels': labels_flattened,
         'predictions': predictions_flattened,
-        'original_predictions': predictions
+        'original_predictions': predictions,
+        'time': datetime.now()
     }
 
     EXPERIMENT_STORE.append(results)
@@ -338,7 +367,7 @@ def run_experiment(train_imgs, test_imgs, train_labels, test_labels, verbose=Tru
 # 2. heterogenaity rate
 # 3. Amount the in degree and out degree are misaligned
 
-# In[9]:
+# In[20]:
 
 
 degree_sequences = [
@@ -347,7 +376,7 @@ degree_sequences = [
 ]
 
 
-# In[10]:
+# In[21]:
 
 
 len(degree_sequences[0])
@@ -355,7 +384,7 @@ len(degree_sequences[0])
 
 # ## Distribution generated degree sequences experiment
 
-# In[11]:
+# In[28]:
 
 
 def generate_degree_sequences(distribution, n_neurons, desired_connections, verbose=False, **kwargs):
@@ -385,21 +414,20 @@ def generate_degree_sequences(distribution, n_neurons, desired_connections, verb
         if verbose:
             plt.hist(samples_transformed, density=True, histtype='stepfilled', alpha=0.2)
             plt.show()
-            print(sum(samples_transformed))
-            print(max(samples_transformed))
-            print(min(samples_transformed))
-            print(sum(samples_transformed))
-            print(sum(samples_transformed)/len(samples_transformed))
-            print() 
+            # print(sum(samples_transformed))
+            # print(max(samples_transformed))
+            # print(min(samples_transformed))
+            # print(sum(samples_transformed))
+            # print(sum(samples_transformed)/len(samples_transformed))
+            # print() 
         return list(samples_transformed.astype(np.int32))
     else:
         raise ValueError('Samples transformed is empty')
 
 
-# In[12]:
+# In[15]:
 
 
-import random
 def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_factor, n_swaps=500):
 
     def index_to_frequency_list(seq, neurons):
@@ -450,7 +478,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Grid Search
 
-# In[13]:
+# In[16]:
 
 
 # example_beta_degree_sequences = generate_degree_sequences('beta', 784, 50000, a=0.3, b=0.3, verbose=True)
@@ -462,7 +490,7 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 # example_degree_sequences = [example_uniform_degree_sequences, example_beta_degree_sequences, example_binomial_degree_sequences]
 
 
-# In[14]:
+# In[17]:
 
 
 # iteration_list = []
@@ -484,11 +512,11 @@ def scale_degree_sequences(degree_sequence_W_in, degree_sequence_W_out, scaling_
 
 # ## Random Search
 
-# In[22]:
+# In[29]:
 
 
 ignore_errors=False
-base_case=True
+base_case=False
 while True:
     if ignore_errors:
         try:
@@ -524,6 +552,7 @@ while True:
             print(exc_type, fname, exc_tb.tb_lineno)
             continue
     elif base_case:
+        print('using base case')
         n_neurons = 2000
         beta_factor = 1
         n_examples = 5000
@@ -532,6 +561,7 @@ while True:
         distribution_type = random.choice(['beta', 'uniform', 'binomial'])
         n_rounds = 5
         n_connections =399800
+        a_sparsity = 0.1
         if distribution_type == 'beta':
             a = random.uniform(0.1, 3)
             b = random.uniform(0.1, 3)
@@ -546,10 +576,11 @@ while True:
         final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
         run_experiment(train_imgs, test_imgs, train_labels, test_labels, 
             verbose=True, degree_sequence_W=final_degree_sequence_W, 
+            use_original_random_graph=False,
             degree_sequence_A=final_degree_sequence_W, 
             n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
             n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
-            beta_factor=beta_factor)
+            beta_factor=beta_factor, a_sparsity=a_sparsity)
     else:
         n_neurons = 2000
         beta_factor = random.uniform(0.1, 1.5)
@@ -559,6 +590,8 @@ while True:
         distribution_type = random.choice(['beta', 'uniform', 'binomial'])
         n_rounds = 5
         n_connections = random.randint(int(n_neurons/25*n_neurons), int(n_neurons/5*n_neurons))
+        a_sparsity = random.uniform(0.025, 0.3)
+
         if distribution_type == 'beta':
             a = random.uniform(0.1, 3)
             b = random.uniform(0.1, 3)
@@ -573,14 +606,28 @@ while True:
         final_degree_sequence_W = scale_degree_sequences(degree_sequence, degree_sequence, 1.0, n_swaps=int(n_neurons/3))
         run_experiment(train_imgs, test_imgs, train_labels, test_labels, 
             verbose=True, degree_sequence_W=final_degree_sequence_W, 
+            use_original_random_graph=False,
             degree_sequence_A=final_degree_sequence_W, 
             n_neurons=len(final_degree_sequence_W), n_iter=n_iter, cap_size=cap_size, 
             n_examples=n_examples, n_rounds=n_rounds, n_connections=n_connections,
-            beta_factor=beta_factor)
+            beta_factor=beta_factor, a_sparsity=a_sparsity)
+
+
+# In[18]:
+
+
+EXPERIMENT_STORE[-2].keys()
+
+
+# In[25]:
+
+
+for i in EXPERIMENT_STORE:
+    print(i['acc_mean'])
 
 
 # In[ ]:
 
 
-EXPERIMENT_STORE
+
 
