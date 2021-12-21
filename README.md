@@ -1,5 +1,6 @@
 # Weakly Supervised Learning with Assemblies of Neurons
-Code supporting the paper "Weakly Supervised Learning with Assemblies of Neurons", by Dabagia, Papadimitriou, and Vempala [2021].
+Code supporting the project "How Can Structural Modifications Help Image Classification with Assemblies of Neurons?", for COMS 6998, by Zhang, Wang, and Weiner.
+Based on "Weakly Supervised Learning with Assemblies of Neurons", by Dabagia, Papadimitriou, and Vempala [2021].
 
 ## Dependencies
 * NumPy
@@ -7,4 +8,4 @@ Code supporting the paper "Weakly Supervised Learning with Assemblies of Neurons
 * matplotlib
 
 ## Usage
-Download and run the notebooks! For MNIST, you will need to supply your own MNIST files, located in a folder called `data` in the same directory as the notebook.
+Download and run the notebooks! For MNIST/EMNIST, you will need to supply your own MNIST/EMNIST files, located in a folder called `data` in the same directory as the notebook.
